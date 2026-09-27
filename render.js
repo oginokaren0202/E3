@@ -1,4 +1,4 @@
-// 純文字 → 團錄 HTML（正式網站和後台共用）
+// 純文字
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2, '0');
 
