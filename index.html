@@ -9,6 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
+.credit-link{text-align:center;margin-top:2.5rem;font-size:.8rem}
+.credit-link a{color:var(--muted);text-decoration:none}
+.credit-link a:hover{text-decoration:underline}
 #snow{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 main{position:relative;z-index:1}
 </style>
@@ -24,6 +27,22 @@ async function getText(path){
   return r.ok ? r.text() : null;
 }
 let setting, items, problems = [];
+// [出現於] bgm/檔名.mp3 → 自動列出有用到這個音檔的篇（依目錄順序）
+function fillAppears(){
+  const norm = x => x.replace(/^\.?\//, '').toLowerCase();
+  app.querySelectorAll('.appears').forEach(el => {
+    const want = el.dataset.src.split(/\s+/).map(norm);
+    const used = items.filter(it => (it.bgm || []).some(b => want.includes(norm(b.src))));
+    el.innerHTML = '出現於：' + (used.length
+      ? used.map(it => `<a href="#${encodeURIComponent(it.id)}">${esc(it.label)}</a>`).join('、')
+      : '（尚未使用）');
+  });
+}
+function creditLink(current){
+  const c = items.find(x => x.file.toLowerCase() === 'credits.txt');
+  if (!c || c === current) return '';
+  return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${esc(c.label)}</a></p>`;
+}
 function route(){
   const id = decodeURIComponent(location.hash.slice(1));
   const d = items.find(x => x.id === id);
@@ -35,13 +54,14 @@ function route(){
         ${prev?`<a href="#${encodeURIComponent(prev.id)}"><small>上一篇</small>${esc(prev.title)}</a>`:'<span></span>'}
         <a class="home" href="#">目錄</a>
         ${next?`<a class="next" href="#${encodeURIComponent(next.id)}"><small>下一篇</small>${esc(next.title)}</a>`:'<span></span>'}
-      </nav>`;
+      </nav>` + creditLink(d);
+    fillAppears();
   } else {
     document.title = setting.title || '目錄';
     const warn = problems.length ? `<p class="msg" style="padding:1rem 0;color:#9A3B3B">${problems.map(esc).join('<br>')}</p>` : '';
     app.innerHTML = renderCover(setting) + warn + (items.length
       ? `<ol class="days">${items.map(d => `<li${d.label.includes('幕間')?' class="inter"':''}><a href="#${encodeURIComponent(d.id)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title||'（未命名）')}</span></a></li>`).join('')}</ol>`
-      : '<p class="msg">目錄是空的。</p>');
+      : '<p class="msg">目錄是空的。</p>') + creditLink(null);
   }
   setSnow(d ? levelOf(d) : 1);
   setupBgm(d);
@@ -79,13 +99,22 @@ function setupBgm(d){
     a.addEventListener('playing', () => { a.dataset.live = '1'; live(); });
     ['pause', 'waiting', 'stalled', 'ended', 'error', 'emptied'].forEach(ev => a.addEventListener(ev, () => { a.dataset.live = '0'; live(); }));
   });
+  // 找不到或無法播放的音檔：滑鼠移到按鈕上會顯示是哪一個
+  const bad = new Set();
+  mine.forEach((a, i) => a.addEventListener('error', () => {
+    bad.add(d.bgm[i].src);
+    btn.title = '無法播放：' + [...bad].join('、');
+  }));
+  // 各軌分開播放：其中一軌失敗，不影響其他軌
   const start = () => {
     mine.forEach(a => a.volume = 0);
-    return Promise.all(mine.map(a => a.play())).then(() => {      // 1.5 秒淡入到各自音量
-      let k = 0;
+    return Promise.allSettled(mine.map(a => a.play())).then(res => {
+      const ok = mine.filter((a, i) => res[i].status === 'fulfilled');
+      if (!ok.length) throw new Error('blocked');
+      let k = 0;                                                   // 1.5 秒淡入到各自音量
       fadeTimer = setInterval(() => {
         k = Math.min(1, k + 0.05);
-        mine.forEach(a => a.volume = k * +a.dataset.vol);
+        ok.forEach(a => a.volume = k * +a.dataset.vol);
         if (k >= 1) clearInterval(fadeTimer);
       }, 75);
     });

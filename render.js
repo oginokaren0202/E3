@@ -78,6 +78,7 @@ function parseDay(txt, chars){
     const line = keepLine.trim();
     if (!line) { flush(); blanks++; continue; }
     if (line.startsWith('//')) continue;                                   // 註解，不顯示
+    { const ma = line.match(/^\[出現於\]\s*(.+)$/); if (ma) { flush(); html += `<p class="nar appears" data-src="${esc(ma[1].trim())}">出現於：</p>`; continue; } }   // 自動列出用到這些音檔的篇
     { const mb = line.match(/^\[音樂\]\s*(\S+)(?:\s+(\d{1,3})\s*[%％])?$/); if (mb) { bgm.push({src: mb[1], vol: mb[2] ? Math.min(100, +mb[2]) / 100 : 1}); continue; } }   // 音樂，不顯示
     if (blanks > 1 && html) html += '<div class="gap"></div>'.repeat(blanks - 1);
     blanks = 0;

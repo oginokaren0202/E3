@@ -103,3 +103,6 @@ article>.nar:first-child:has(> .row){margin-top:-1rem}
 .row>.center{grid-row:1}
 .row>:not(.center):not(.bgm){grid-row:1}
 .bgm-solo{margin:0 0 1rem}
+
+/* 音樂來源頁：「出現於」緊接在上一段下方 */
+.nar.appears{margin-top:-1.25rem}
