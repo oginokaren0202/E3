@@ -108,10 +108,11 @@ function levelOf(d){
   return 1;
 }
 
-const LEVELS = {1:{count:22, speed:0.5}, 2:{count:55, speed:0.65}, 3:{count:105, speed:0.8}, 4:{count:170, speed:1}};
+// count 雪量｜speed 下落速度｜wind 往左斜飄的程度
+const LEVELS = {1:{count:22, speed:0.5, wind:0}, 2:{count:55, speed:0.9, wind:0.25}, 3:{count:105, speed:1.4, wind:0.7}, 4:{count:170, speed:2.1, wind:1.4}};
 const cv = document.getElementById('snow'), ctx = cv.getContext('2d');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-let flakes = [], target = 0, speedK = 0.5, W = 0, H = 0, running = false;
+let flakes = [], target = 0, speedK = 0.5, windK = 0, W = 0, H = 0, running = false;
 
 function resize(){
   const r = devicePixelRatio || 1;
@@ -120,14 +121,14 @@ function resize(){
   ctx.setTransform(r, 0, 0, r, 0, 0);
 }
 function newFlake(top){
-  return {x: Math.random() * W, y: top ? -10 : Math.random() * H,
+  return {x: Math.random() * (W + H * windK * 0.5), y: top ? -10 : Math.random() * H,   // 有風時從右側多補雪
           r: 0.8 + Math.random() * 2.2, v: 0.4 + Math.random() * 0.8,
           sway: Math.random() * Math.PI * 2, a: 0.5 + Math.random() * 0.5};
 }
 function setSnow(level){
   const L = LEVELS[level];
   target = Math.round(L.count * (innerWidth * innerHeight) / (1280 * 800));
-  speedK = L.speed;
+  speedK = L.speed; windK = L.wind;
   if (!running && !reduce.matches) { running = true; requestAnimationFrame(tick); }
 }
 // 文字欄位範圍內的雪花淡到幾乎透明，邊緣漸變
@@ -150,7 +151,8 @@ function tick(){
     const f = flakes[i];
     f.y += f.v * speedK * (0.6 + f.r / 3);
     f.sway += 0.01;
-    f.x += Math.sin(f.sway) * 0.3;
+    f.x += Math.sin(f.sway) * 0.3 - windK * (0.6 + f.r / 3);   // 往左吹
+    if (f.x < -10) f.x = W + 10;
     if (f.y > H + 10){
       if (flakes.length > target) { flakes.splice(i, 1); continue; }
       Object.assign(f, newFlake(true));
