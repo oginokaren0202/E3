@@ -1,5 +1,6 @@
 # 第五日： 〈到那冰河上〉之五
 [音樂]bgm/FIRE.mp3
+[音樂]bgm/Lrye.mp3
 [置中][色=#D6D6D6][{事件1|Hagall} | 其枝](https://projectofficial202.wixsite.com/ullarsalr/events/hailstorm)[/色][/置中] [小][靠右]*2026.09.10*[/靠右][/小]
 
 
