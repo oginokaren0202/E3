@@ -1,5 +1,5 @@
 :root{
-  --bg:#080B3B; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#3E3E57;
+  --bg:#3E3E57; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#3E3E57;
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   box-sizing:border-box;
