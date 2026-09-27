@@ -1,0 +1,31 @@
+# 素材致謝
+
+**火聲**
+[The Fireplace 3.wav](https://freesound.org/s/387128/) by NoOneIsReal
+授權：[Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+[出現於] bgm/FIRE.mp3
+
+**風聲**
+[a gentle breeze, wind 1](https://freesound.org/s/181250/) by mario1298
+授權：[Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+[出現於] bgm/breeze.mp3
+
+**踏雪聲**
+[Snow Footsteps Crunch 1 Mono.wav](https://freesound.org/s/614137/) by JRWEntertainment
+授權：[Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+[出現於] bgm/snowstep.mp3
+
+**市集聲**
+[Mercat_Bellcaire_1_3.wav](https://freesound.org/s/69823/) by sonsdebarcelona
+授權：[Attribution NonCommercial 3.0](https://creativecommons.org/licenses/by-nc/3.0/)
+[出現於] bgm/market.mp3
+
+**里拉琴聲**
+[lyreharp.wav](https://freesound.org/s/649925/) by SamRam21
+授權：[Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+[出現於] bgm/Irye.mp3
+
+**水流聲**
+[Gentle waves close-up](https://freesound.org/s/81465/) by sarana
+授權：[Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+[出現於] bgm/unnr.mp3
