@@ -1,5 +1,5 @@
 :root{
-  --bg:#1F1F38; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#C9B98F;
+  --bg:#080B3B; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#C9B98F;
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   box-sizing:border-box;
@@ -82,13 +82,23 @@ figure.sm figcaption{padding:.5rem 0 0}
 /* 文章開頭就是這種並列行時，貼近上方分隔線 */
 article>.nar:first-child:has(> .row){margin-top:-1rem}
 
-/* 音樂按鈕 */
-.bgm{width:2rem;height:2rem;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink);display:inline-grid;place-items:center;cursor:pointer;padding:0;opacity:.75}
+/* 音樂按鈕：播放鍵＋音波 */
+.bgm{height:2rem;border-radius:1rem;border:1px solid var(--rule);background:transparent;color:var(--ink);display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;padding:0 .75rem 0 .65rem;opacity:.75}
 .bgm:hover{opacity:1}
 .bgm:focus-visible{outline:2px solid var(--gm);outline-offset:3px}
-.bgm svg{width:.8rem;height:.8rem;fill:currentColor}
+.bgm svg{width:.75rem;height:.75rem;fill:currentColor;flex:none}
 .bgm .i-pause,.bgm.on .i-play{display:none}
 .bgm.on .i-pause{display:block}
+.wave{display:inline-flex;align-items:center;gap:2px;height:.9rem}
+.wave i{display:block;width:2px;height:20%;background:currentColor;border-radius:1px;opacity:.5;transition:height .3s,opacity .3s}
+/* 真的有聲音在播時才跳動 */
+.bgm.live .wave i{opacity:1;animation:wave 1.1s ease-in-out infinite}
+.bgm.live .wave i:nth-child(2){animation-delay:-.45s;animation-duration:.9s}
+.bgm.live .wave i:nth-child(3){animation-delay:-.2s;animation-duration:1.25s}
+.bgm.live .wave i:nth-child(4){animation-delay:-.7s;animation-duration:.95s}
+.bgm.live .wave i:nth-child(5){animation-delay:-.35s;animation-duration:1.15s}
+@keyframes wave{0%,100%{height:20%}50%{height:100%}}
+@media (prefers-reduced-motion:reduce){.bgm.live .wave i{animation:none;height:70%}}
 .row>.bgm{grid-column:1;grid-row:1;justify-self:start;align-self:center}
 .row>.center{grid-row:1}
 .row>:not(.center):not(.bgm){grid-row:1}

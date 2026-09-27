@@ -108,7 +108,7 @@ function parseDay(txt, chars){
   return {title, html, bgm};
 }
 
-const BGM_BTN = '<button class="bgm" type="button" aria-label="播放音樂"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg></button>';
+const BGM_BTN = '<button class="bgm" type="button" aria-label="播放音樂"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></button>';
 function renderDay(label, d){
   let body = d.html;
   if (d.bgm) {

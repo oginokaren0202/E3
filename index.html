@@ -66,6 +66,10 @@ function setupBgm(d){
   };
   a.addEventListener('play', sync);
   a.addEventListener('pause', sync);
+  // 音波只在「真的發出聲音」時跳動：載入中、緩衝中、暫停都不跳
+  const live = on => btn.classList.toggle('live', on);
+  a.addEventListener('playing', () => live(true));
+  ['pause', 'waiting', 'stalled', 'ended', 'error', 'emptied'].forEach(ev => a.addEventListener(ev, () => live(false)));
   const start = () => {
     a.volume = 0;
     return a.play().then(() => {                 // 1.5 秒淡入
