@@ -1,4 +1,5 @@
 前日談　thedaybefore.txt
 第一日　day01.txt
 第二日　day02.txt
+第三日　day03.txt
 
