@@ -23,7 +23,7 @@
 **里拉琴聲**
 [lyreharp.wav](https://freesound.org/s/649925/) by SamRam21
 授權：[Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
-[出現於] bgm/Irye.mp3
+[出現於] bgm/lrye.mp3
 
 **水流聲**
 [Gentle waves close-up](https://freesound.org/s/81465/) by sarana
