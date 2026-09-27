@@ -50,39 +50,53 @@ function route(){
 
 
 // ===== 音樂 =====
-// 進入有音樂的那篇就自動播放；讀者按過暫停，之後換篇就不自動播，直到再按播放
-let audio = null, userPaused = false, fadeTimer;
+// 一篇可以有多個 [音樂]，同時播放，共用一個按鈕
+// 進入該篇就自動播放；讀者按過暫停，之後換篇就不自動播，直到再按播放
+let tracks = [], userPaused = false, fadeTimer;
 function setupBgm(d){
-  if (audio) { audio.pause(); audio = null; }
+  tracks.forEach(t => t.pause());
+  tracks = [];
   clearInterval(fadeTimer);
   const btn = app.querySelector('.bgm');
-  if (!d || !d.bgm || !btn) return;
-  const a = new Audio(/^https?:/.test(d.bgm) ? d.bgm : encodeURI(d.bgm));
-  a.loop = true;
-  audio = a;
+  if (!d || !d.bgm || !d.bgm.length || !btn) return;
+  tracks = d.bgm.map(b => {
+    const a = new Audio(/^https?:/.test(b.src) ? b.src : encodeURI(b.src));
+    a.loop = true; a.dataset.vol = b.vol;
+    return a;
+  });
+  const mine = tracks;
+  const anyPlaying = () => mine.some(a => !a.paused);
   const sync = () => {
-    btn.classList.toggle('on', !a.paused);
-    btn.setAttribute('aria-label', a.paused ? '播放音樂' : '暫停音樂');
+    const on = anyPlaying();
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-label', on ? '暫停音樂' : '播放音樂');
   };
-  a.addEventListener('play', sync);
-  a.addEventListener('pause', sync);
-  // 音波只在「真的發出聲音」時跳動：載入中、緩衝中、暫停都不跳
-  const live = on => btn.classList.toggle('live', on);
-  a.addEventListener('playing', () => live(true));
-  ['pause', 'waiting', 'stalled', 'ended', 'error', 'emptied'].forEach(ev => a.addEventListener(ev, () => live(false)));
+  // 音波只在「真的發出聲音」時跳動：任一軌在播就跳
+  const live = () => btn.classList.toggle('live', mine.some(a => a.dataset.live === '1'));
+  mine.forEach(a => {
+    a.addEventListener('play', sync);
+    a.addEventListener('pause', sync);
+    a.addEventListener('playing', () => { a.dataset.live = '1'; live(); });
+    ['pause', 'waiting', 'stalled', 'ended', 'error', 'emptied'].forEach(ev => a.addEventListener(ev, () => { a.dataset.live = '0'; live(); }));
+  });
   const start = () => {
-    a.volume = 0;
-    return a.play().then(() => {                 // 1.5 秒淡入
-      let v = 0;
-      fadeTimer = setInterval(() => { v = Math.min(1, v + 0.05); a.volume = v; if (v >= 1) clearInterval(fadeTimer); }, 75);
+    mine.forEach(a => a.volume = 0);
+    return Promise.all(mine.map(a => a.play())).then(() => {      // 1.5 秒淡入到各自音量
+      let k = 0;
+      fadeTimer = setInterval(() => {
+        k = Math.min(1, k + 0.05);
+        mine.forEach(a => a.volume = k * +a.dataset.vol);
+        if (k >= 1) clearInterval(fadeTimer);
+      }, 75);
     });
   };
+  const stop = () => { clearInterval(fadeTimer); mine.forEach(a => a.pause()); };
   btn.onclick = () => {
-    if (a.paused) { userPaused = false; start().catch(() => {}); }
-    else { userPaused = true; clearInterval(fadeTimer); a.pause(); }
+    if (anyPlaying()) { userPaused = true; stop(); }
+    else { userPaused = false; start().catch(() => { stop(); sync(); }); }
   };
   sync();
-  if (!userPaused) start().catch(() => {});      // 瀏覽器擋自動播放時，按鈕維持「播放」狀態
+  if (!userPaused) start().catch(() => { stop(); sync(); });   // 被瀏覽器擋下 → 全部停住，按鈕維持「播放」
 }
 
 // ===== 下雪 =====
@@ -133,10 +147,10 @@ function setSnow(level){
 }
 // 文字欄位範圍內的雪花淡到幾乎透明，邊緣漸變
 let col = {left:0, right:0};
-// 手機（窄螢幕）文字欄位幾乎占滿畫面，雪在欄位內保留較多，才看得到
+// 雪飄進文字欄位時保留約 40% 亮度（手機、電腦相同）
 function fadeAt(x){
   const m = col, edge = 48;
-  const inside = innerWidth < 700 ? 0.4 : 0.06;
+  const inside = 0.4;
   const d = Math.min(x - m.left, m.right - x);
   if (d <= -edge) return 1;
   if (d >= 0) return inside;

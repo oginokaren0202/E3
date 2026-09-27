@@ -65,7 +65,7 @@ function joinLines(arr){
 }
 
 function parseDay(txt, chars){
-  let title = '', html = '', bgm = '';
+  let title = '', html = '', bgm = [];
   const names = Object.keys(chars).sort((a,b) => b.length - a.length);
   let buf = [], quote = [], blanks = 0;
   const flush = () => {
@@ -78,7 +78,7 @@ function parseDay(txt, chars){
     const line = keepLine.trim();
     if (!line) { flush(); blanks++; continue; }
     if (line.startsWith('//')) continue;                                   // 註解，不顯示
-    { const mb = line.match(/^\[音樂\]\s*(\S+)$/); if (mb) { bgm = mb[1]; continue; } }   // 音樂，不顯示
+    { const mb = line.match(/^\[音樂\]\s*(\S+)(?:\s+(\d{1,3})\s*[%％])?$/); if (mb) { bgm.push({src: mb[1], vol: mb[2] ? Math.min(100, +mb[2]) / 100 : 1}); continue; } }   // 音樂，不顯示
     if (blanks > 1 && html) html += '<div class="gap"></div>'.repeat(blanks - 1);
     blanks = 0;
     let m;
@@ -111,7 +111,7 @@ function parseDay(txt, chars){
 const BGM_BTN = '<button class="bgm" type="button" aria-label="播放音樂"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></button>';
 function renderDay(label, d){
   let body = d.html;
-  if (d.bgm) {
+  if (d.bgm && d.bgm.length) {
     // 有「事件｜日期」那種並列行 → 按鈕放在最左；沒有 → 放在文章開頭靠左
     body = body.includes('<span class="row">')
       ? body.replace('<span class="row">', '<span class="row">' + BGM_BTN)
