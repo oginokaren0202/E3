@@ -39,11 +39,6 @@ a:focus-visible{outline:2px solid var(--gm);outline-offset:3px}
 .say b{display:block;color:var(--cc);font-weight:500;font-size:.9rem;line-height:1.4}
 .say p{margin:.15rem 0 0}
 
-.roll{font-size:.9rem;color:var(--muted);margin:.6rem 0 .6rem 3.35rem;line-height:1.6}
-.roll strong{color:var(--ink);font-weight:500}
-.roll.key{margin:2rem 0;padding:1rem 1.25rem;background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--gm);font-size:1rem;color:var(--ink)}
-.roll .lbl{display:block;font-family:var(--serif);font-weight:600;color:var(--gm);margin-bottom:.25rem}
-.roll.key .res{font-weight:500}
 
 figure{margin:2.5rem -1.25rem}
 figure img{display:block;width:100%;height:auto}
@@ -58,3 +53,23 @@ figcaption{font-size:.85rem;color:var(--muted);padding:.5rem 1.25rem 0}
 .days .n{font-size:.95rem}
 .days li.inter a{padding:.45rem 0 .45rem 1.5rem;font-size:.9rem;grid-template-columns:5rem 1fr auto}
 .days li.inter .t{color:var(--muted)}
+
+/* ===== 文字樣式 ===== */
+strong{font-weight:700}
+mark{background:rgba(255,214,102,.3);color:inherit;padding:0 .1em}
+del{opacity:.6}
+ruby rt{font-size:.55em;color:var(--muted)}
+.big{font-size:1.4em;line-height:1.5}
+.small{font-size:.8em;color:var(--muted)}
+.center{display:block;text-align:center}
+.right{display:block;text-align:right}
+.spoiler{background:var(--ink);color:transparent;border-radius:3px;cursor:pointer;transition:background .2s,color .2s}
+.spoiler a{color:transparent}
+.spoiler:hover,.spoiler:focus{background:rgba(255,255,255,.12);color:inherit;outline:none}
+.spoiler:hover a,.spoiler:focus a{color:inherit}
+@media (prefers-reduced-motion:reduce){.spoiler{transition:none}}
+blockquote{font-family:var(--serif);white-space:pre-wrap;line-height:2;margin:1.75rem 0;padding:1rem 1.25rem;background:var(--paper);border-radius:4px}
+hr{border:0;border-top:1px solid var(--rule);margin:3rem auto;width:40%}
+.say .note{color:var(--muted);font-weight:400;margin-left:.25em}
+figure.sm{max-width:50%;margin:2rem auto}
+figure.sm figcaption{padding:.5rem 0 0}

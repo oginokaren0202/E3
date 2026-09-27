@@ -40,7 +40,7 @@ function route(){
     document.title = setting.title || '目錄';
     const warn = problems.length ? `<p class="msg" style="padding:1rem 0;color:#9A3B3B">${problems.map(esc).join('<br>')}</p>` : '';
     app.innerHTML = renderCover(setting) + warn + (items.length
-      ? `<ol class="days">${items.map(d => `<li${d.label.includes('幕間')?' class="inter"':''}><a href="#${encodeURIComponent(d.id)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title||'（未命名）')}</span>${d.dice?'<span title="有擲骰判定">🎲</span>':''}</a></li>`).join('')}</ol>`
+      ? `<ol class="days">${items.map(d => `<li${d.label.includes('幕間')?' class="inter"':''}><a href="#${encodeURIComponent(d.id)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title||'（未命名）')}</span></a></li>`).join('')}</ol>`
       : '<p class="msg">目錄是空的。</p>');
   }
   setSnow(d ? levelOf(d) : 1);

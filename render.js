@@ -1,8 +1,35 @@
-// 純文字 → 團錄 HTML（正式網站和後台共用）
+// 純文字 → 團錄 HTML
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2, '0');
-// [顯示文字](網址) → 連結；只接受 http/https，另開新分頁
-const linkify = h => h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+// ===== 行內語法 =====
+function inline(raw){
+  const keep = [];
+  const hold = h => `\u0001${keep.push(h) - 1}\u0002`;
+  let t = raw;
+  // \符號 → 顯示符號本身
+  t = t.replace(/\\([\\*~_=|{}\[\]#>\/-])/g, (_, c) => hold(esc(c)));
+  t = esc(t);
+  // 連結 [文字](網址)
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, a, u) => hold(`<a href="${u}" target="_blank" rel="noopener">${fmt(a)}</a>`));
+  t = fmt(t);
+  return t.replace(/\u0001(\d+)\u0002/g, (_, i) => keep[i]);
+}
+function fmt(t){
+  return t
+    .replace(/\{([^{}|]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>')                  // {漢字|讀音}
+    .replace(/\[色=(#[0-9a-fA-F]{3,8})\]([\s\S]+?)\[\/色\]/g, '<span style="color:$1">$2</span>')
+    .replace(/\[大\]([\s\S]+?)\[\/大\]/g, '<span class="big">$1</span>')
+    .replace(/\[小\]([\s\S]+?)\[\/小\]/g, '<span class="small">$1</span>')
+    .replace(/\[置中\]([\s\S]+?)\[\/置中\]/g, '<span class="center">$1</span>')
+    .replace(/\[靠右\]([\s\S]+?)\[\/靠右\]/g, '<span class="right">$1</span>')
+    .replace(/\|\|([\s\S]+?)\|\|/g, '<span class="spoiler" tabindex="0" title="點擊顯示">$1</span>')
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\s][\s\S]*?)\*/g, '<em>$1</em>')
+    .replace(/~~([\s\S]+?)~~/g, '<del>$1</del>')
+    .replace(/__([\s\S]+?)__/g, '<u>$1</u>')
+    .replace(/==([\s\S]+?)==/g, '<mark>$1</mark>');
+}
 
 function parseSetting(txt){
   const s = {title:'', desc:'', chars:{}};
@@ -26,47 +53,46 @@ function parseSetting(txt){
 }
 
 function parseDay(txt, chars){
-  let title = '', html = '', dice = false;
+  let title = '', html = '';
   const names = Object.keys(chars).sort((a,b) => b.length - a.length);
-  let buf = [], blanks = 0;
-  // 連續的一般文字行合成一段，保留換行與行首空白
+  let buf = [], quote = [], blanks = 0;
   const flush = () => {
-    if (buf.length) html += `<p class="nar">${buf.map(l => linkify(esc(l))).join('\n')}</p>`;
-    buf = [];
+    if (buf.length) html += `<p class="nar">${buf.map(inline).join('\n')}</p>`;
+    if (quote.length) html += `<blockquote>${quote.map(inline).join('\n')}</blockquote>`;
+    buf = []; quote = [];
   };
   for (const raw of (txt||'').split(/\r?\n/)){
-    const keep = raw.replace(/\s+$/, '');      // 只去掉行尾空白，行首縮排保留
-    const line = keep.trim();
+    const keepLine = raw.replace(/\s+$/, '');
+    const line = keepLine.trim();
     if (!line) { flush(); blanks++; continue; }
-    if (blanks > 1 && html) html += '<div class="gap"></div>'.repeat(blanks - 1);   // 多個空行 → 多留空間
+    if (line.startsWith('//')) continue;                                   // 註解，不顯示
+    if (blanks > 1 && html) html += '<div class="gap"></div>'.repeat(blanks - 1);
     blanks = 0;
     let m;
     if (!title && (m = line.match(/^#\s+(.+)$/))) { title = m[1]; continue; }
-    if ((m = line.match(/^##\s+(.+)$/))) { flush(); html += `<h2 class="scene">${esc(m[1])}</h2>`; continue; }
-    if ((m = line.match(/^🎲(!|！)?\s*(\S+)\s+(\S+)\s+(\d+)\s*\/\s*(\d+)\s*(.*)$/u))) {
-      flush(); dice = true;
-      const key = !!m[1], roll = +m[4], target = +m[5];
-      const res = m[6] || (roll <= target ? '成功' : '失敗');
-      html += `<p class="roll${key?' key':''}">${key?'<span class="lbl">判定</span>':''}${esc(m[2])}　${esc(m[3])} 1D100 → <strong>${roll}</strong> / ${target}　<span class="res">${esc(res)}</span></p>`;
-      continue;
-    }
-    if ((m = line.match(/^\[圖\]\s*(\S+)\s*(.*)$/))) {
+    if ((m = line.match(/^##\s+(.+)$/))) { flush(); html += `<h2 class="scene">${inline(m[1])}</h2>`; continue; }
+    if (/^-{3,}$/.test(line)) { flush(); html += '<hr>'; continue; }
+    if ((m = line.match(/^>\s?(.*)$/))) { if (buf.length) { html += `<p class="nar">${buf.map(inline).join('\n')}</p>`; buf = []; } quote.push(m[1]); continue; }
+    if (quote.length) flush();
+    if ((m = line.match(/^\[(圖|小圖)\]\s*(\S+)\s*(.*)$/))) {
       flush();
-      html += `<figure><img src="images/${esc(m[1])}" alt="${esc(m[2])}" loading="lazy">${m[2]?`<figcaption>${esc(m[2])}</figcaption>`:''}</figure>`;
+      html += `<figure${m[1]==='小圖'?' class="sm"':''}><img src="images/${esc(m[2])}" alt="${esc(m[3].replace(/[*_~=|]/g, ''))}" loading="lazy">${m[3]?`<figcaption>${inline(m[3])}</figcaption>`:''}</figure>`;
       continue;
     }
-    const who = names.find(n => line.startsWith(n + '：') || line.startsWith(n + ':'));
+    const who = names.find(n => new RegExp('^' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([（(][^）)]*[）)])?[：:]').test(line));
     if (who) {
       flush();
-      const c = chars[who], text = line.slice(who.length + 1).trim();
+      const mm = line.slice(who.length).match(/^([（(][^）)]*[）)])?[：:]\s*([\s\S]*)$/);
+      const note = mm[1] ? `<span class="note">${esc(mm[1])}</span>` : '';
+      const c = chars[who];
       const av = c.avatar ? `<img class="av" src="images/${esc(c.avatar)}" alt="">` : `<div class="av" aria-hidden="true">${esc([...who][0])}</div>`;
-      html += `<div class="say" style="--c:${c.color}">${av}<div><b>${esc(who)}</b><p>${linkify(esc(text))}</p></div></div>`;
+      html += `<div class="say" style="--c:${c.color}">${av}<div><b>${esc(who)}${note}</b><p>${inline(mm[2])}</p></div></div>`;
       continue;
     }
-    buf.push(keep);
+    buf.push(keepLine);
   }
   flush();
-  return {title, html, dice};
+  return {title, html};
 }
 
 function renderDay(label, d){
