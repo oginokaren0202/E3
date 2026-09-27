@@ -44,7 +44,41 @@ function route(){
       : '<p class="msg">目錄是空的。</p>');
   }
   setSnow(d ? levelOf(d) : 1);
+  setupBgm(d);
   window.scrollTo(0, 0);
+}
+
+
+// ===== 音樂 =====
+// 進入有音樂的那篇就自動播放；讀者按過暫停，之後換篇就不自動播，直到再按播放
+let audio = null, userPaused = false, fadeTimer;
+function setupBgm(d){
+  if (audio) { audio.pause(); audio = null; }
+  clearInterval(fadeTimer);
+  const btn = app.querySelector('.bgm');
+  if (!d || !d.bgm || !btn) return;
+  const a = new Audio(/^https?:/.test(d.bgm) ? d.bgm : encodeURI(d.bgm));
+  a.loop = true;
+  audio = a;
+  const sync = () => {
+    btn.classList.toggle('on', !a.paused);
+    btn.setAttribute('aria-label', a.paused ? '播放音樂' : '暫停音樂');
+  };
+  a.addEventListener('play', sync);
+  a.addEventListener('pause', sync);
+  const start = () => {
+    a.volume = 0;
+    return a.play().then(() => {                 // 1.5 秒淡入
+      let v = 0;
+      fadeTimer = setInterval(() => { v = Math.min(1, v + 0.05); a.volume = v; if (v >= 1) clearInterval(fadeTimer); }, 75);
+    });
+  };
+  btn.onclick = () => {
+    if (a.paused) { userPaused = false; start().catch(() => {}); }
+    else { userPaused = true; clearInterval(fadeTimer); a.pause(); }
+  };
+  sync();
+  if (!userPaused) start().catch(() => {});      // 瀏覽器擋自動播放時，按鈕維持「播放」狀態
 }
 
 // ===== 下雪 =====

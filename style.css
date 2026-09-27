@@ -1,5 +1,5 @@
 :root{
-  --bg:#3E3E57; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#C9B98F;
+  --bg:#080B3B; --paper:#11155A; --ink:#FFFFFF; --muted:rgba(255,255,255,.62); --rule:rgba(255,255,255,.18); --gm:#C9B98F;
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   box-sizing:border-box;
@@ -81,3 +81,15 @@ figure.sm figcaption{padding:.5rem 0 0}
 .row .right{display:inline}
 /* 文章開頭就是這種並列行時，貼近上方分隔線 */
 article>.nar:first-child:has(> .row){margin-top:-1rem}
+
+/* 音樂按鈕 */
+.bgm{width:2rem;height:2rem;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink);display:inline-grid;place-items:center;cursor:pointer;padding:0;opacity:.75}
+.bgm:hover{opacity:1}
+.bgm:focus-visible{outline:2px solid var(--gm);outline-offset:3px}
+.bgm svg{width:.8rem;height:.8rem;fill:currentColor}
+.bgm .i-pause,.bgm.on .i-play{display:none}
+.bgm.on .i-pause{display:block}
+.row>.bgm{grid-column:1;grid-row:1;justify-self:start;align-self:center}
+.row>.center{grid-row:1}
+.row>:not(.center):not(.bgm){grid-row:1}
+.bgm-solo{margin:0 0 1rem}
