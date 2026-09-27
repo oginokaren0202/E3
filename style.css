@@ -106,3 +106,19 @@ article>.nar:first-child:has(> .row){margin-top:-1rem}
 
 /* 音樂來源頁：「出現於」緊接在上一段下方 */
 .nar.appears{margin-top:-1.25rem}
+
+/* ===== 目錄頁：依篇章分組 ===== */
+.toc-b .single a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;padding:.7rem 0;text-decoration:none;align-items:baseline}
+.toc-b .single a:hover .t{text-decoration:underline}
+.toc-b .n{font-family:var(--serif);color:var(--muted);font-size:.95rem}
+.toc-b .arc{padding:1.5rem 0 1rem;border-top:1px solid var(--rule)}
+.toc-b .arc h3{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 .75rem}
+.toc-b .arc ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:.35rem 1rem}
+.toc-b .arc a{display:flex;gap:.6rem;align-items:baseline;padding:.2rem 0;text-decoration:none}
+.toc-b .arc a:hover .s{text-decoration:underline}
+.toc-b .single + .arc,.toc-b .arc + .single{border-top:1px solid var(--rule)}
+.toc-b .single.inter a{padding-left:1.5rem;font-size:.9rem}
+/* 素材致謝：和列表分開 */
+.toc-credits{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule)}
+.toc-credits a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;text-decoration:none;color:var(--muted);font-size:.9rem;align-items:baseline}
+.toc-credits a:hover .t{text-decoration:underline}

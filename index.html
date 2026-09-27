@@ -38,8 +38,42 @@ function fillAppears(){
       : '（尚未使用）');
   });
 }
+// ===== 目錄頁：依篇章分組 =====
+const isCredits = x => x.file.toLowerCase() === 'credits.txt';
+// 標題開頭和顯示名稱相同的「第X日：」去掉
+function shortTitle(it){
+  const t = it.title || '';
+  const re = new RegExp('^' + it.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[：:]\\s*');
+  return t.replace(re, '') || t;
+}
+// 連續幾篇的標題是同一個〈篇名〉→ 歸成一組；幕間、前日談等沒有〈〉的單獨一行
+function tocHtml(){
+  const main = items.filter(x => !isCredits(x)), cr = items.find(isCredits);
+  const groups = [];
+  for (const it of main){
+    const st = shortTitle(it), m = st.match(/^(〈[^〉]+〉)\s*(.*)$/);
+    const key = m && !it.label.includes('幕間') ? m[1] : null;
+    const last = groups[groups.length - 1];
+    if (key && last && last.key === key) last.list.push({it, s: m[2]});
+    else groups.push({key, list: [{it, s: key ? m[2] : (st || '（未命名）')}]});
+  }
+  const link = it => `#${encodeURIComponent(it.id)}`;
+  let h = '<div class="toc-b">';
+  for (const g of groups){
+    if (g.key) {
+      h += `<section class="arc"><h3>${esc(g.key)}</h3><ul>${g.list.map(({it, s}) =>
+        `<li><a href="${link(it)}"><span class="n">${esc(it.label)}</span><span class="s">${esc(s)}</span></a></li>`).join('')}</ul></section>`;
+    } else {
+      const it = g.list[0].it;
+      h += `<div class="single${it.label.includes('幕間') ? ' inter' : ''}"><a href="${link(it)}"><span class="n">${esc(it.label)}</span><span class="t">${esc(g.list[0].s)}</span></a></div>`;
+    }
+  }
+  h += '</div>';
+  if (cr) h += `<p class="toc-credits"><a href="${link(cr)}"><span class="n">${esc(cr.label)}</span><span class="t">${esc(cr.title || '')}</span></a></p>`;
+  return h;
+}
 function creditLink(current){
-  const c = items.find(x => x.file.toLowerCase() === 'credits.txt');
+  const c = items.find(isCredits);
   if (!c || c === current) return '';
   return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${esc(c.label)}</a></p>`;
 }
@@ -59,9 +93,7 @@ function route(){
   } else {
     document.title = setting.title || '目錄';
     const warn = problems.length ? `<p class="msg" style="padding:1rem 0;color:#9A3B3B">${problems.map(esc).join('<br>')}</p>` : '';
-    app.innerHTML = renderCover(setting) + warn + (items.length
-      ? `<ol class="days">${items.map(d => `<li${d.label.includes('幕間')?' class="inter"':''}><a href="#${encodeURIComponent(d.id)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title||'（未命名）')}</span></a></li>`).join('')}</ol>`
-      : '<p class="msg">目錄是空的。</p>') + creditLink(null);
+    app.innerHTML = renderCover(setting) + warn + (items.length ? tocHtml() : '<p class="msg">目錄是空的。</p>');
   }
   setSnow(d ? levelOf(d) : 1);
   setupBgm(d);
