@@ -133,12 +133,14 @@ function setSnow(level){
 }
 // 文字欄位範圍內的雪花淡到幾乎透明，邊緣漸變
 let col = {left:0, right:0};
+// 手機（窄螢幕）文字欄位幾乎占滿畫面，雪在欄位內保留較多，才看得到
 function fadeAt(x){
   const m = col, edge = 48;
+  const inside = innerWidth < 700 ? 0.4 : 0.06;
   const d = Math.min(x - m.left, m.right - x);
   if (d <= -edge) return 1;
-  if (d >= 0) return 0.06;
-  return 0.06 + (-d / edge) * 0.94;
+  if (d >= 0) return inside;
+  return inside + (-d / edge) * (1 - inside);
 }
 function tick(){
   if (reduce.matches) { ctx.clearRect(0, 0, W, H); running = false; return; }
