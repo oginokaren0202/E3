@@ -7,31 +7,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260927">
+<link rel="stylesheet" href="style.css?v=20260927b">
 <style>
-/* ===== 目錄頁：依篇章分組 ===== */
-.toc-b .single a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;padding:.7rem 0;text-decoration:none;align-items:baseline}
-.toc-b .single a:hover .t{text-decoration:underline}
-.toc-b .n{font-family:var(--serif);color:var(--muted);font-size:.95rem}
-.toc-b .arc{padding:1.5rem 0 1rem;border-top:1px solid var(--rule)}
-.toc-b .arc h3{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 .75rem}
-.toc-b .arc ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:.35rem 1rem}
-.toc-b .arc a{display:flex;gap:.6rem;align-items:baseline;padding:.2rem 0;text-decoration:none}
-.toc-b .arc a:hover .s{text-decoration:underline}
-.toc-b .single + .arc,.toc-b .arc + .single{border-top:1px solid var(--rule)}
-.toc-b .single.inter a{padding-left:1.5rem;font-size:.9rem}
-/* 素材致謝：和列表分開 */
 .toc-credits{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule)}
 .toc-credits a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;text-decoration:none;color:var(--muted);font-size:.9rem;align-items:baseline}
 .toc-credits a:hover .t{text-decoration:underline}
-.toc-b ul,.toc-b li{list-style:none}
 .credit-link{text-align:center;margin-top:2.5rem;font-size:.8rem}
 .credit-link a{color:var(--muted);text-decoration:none}
 .credit-link a:hover{text-decoration:underline}
 #snow{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 main{position:relative;z-index:1}
 </style>
-<script src="render.js?v=20260927"></script>
+<script src="render.js?v=20260927b"></script>
 </head>
 <body>
 <canvas id="snow" aria-hidden="true"></canvas>
@@ -54,37 +41,12 @@ function fillAppears(){
       : '（尚未使用）');
   });
 }
-// ===== 目錄頁：依篇章分組 =====
+// ===== 目錄頁：一行一篇；素材致謝分開放在列表下方 =====
 const isCredits = x => x.file.toLowerCase() === 'credits.txt';
-// 標題開頭和顯示名稱相同的「第X日：」去掉
-function shortTitle(it){
-  const t = it.title || '';
-  const re = new RegExp('^' + it.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[：:]\\s*');
-  return t.replace(re, '') || t;
-}
-// 連續幾篇的標題是同一個〈篇名〉→ 歸成一組；幕間、前日談等沒有〈〉的單獨一行
 function tocHtml(){
   const main = items.filter(x => !isCredits(x)), cr = items.find(isCredits);
-  const groups = [];
-  for (const it of main){
-    const st = shortTitle(it), m = st.match(/^(〈[^〉]+〉)\s*(.*)$/);
-    const key = m && !it.label.includes('幕間') ? m[1] : null;
-    const last = groups[groups.length - 1];
-    if (key && last && last.key === key) last.list.push({it, s: m[2]});
-    else groups.push({key, list: [{it, s: key ? m[2] : (st || '（未命名）')}]});
-  }
   const link = it => `#${encodeURIComponent(it.id)}`;
-  let h = '<div class="toc-b">';
-  for (const g of groups){
-    if (g.key) {
-      h += `<section class="arc"><h3>${esc(g.key)}</h3><ul>${g.list.map(({it, s}) =>
-        `<li><a href="${link(it)}"><span class="n">${esc(it.label)}</span><span class="s">${esc(s)}</span></a></li>`).join('')}</ul></section>`;
-    } else {
-      const it = g.list[0].it;
-      h += `<div class="single${it.label.includes('幕間') ? ' inter' : ''}"><a href="${link(it)}"><span class="n">${esc(it.label)}</span><span class="t">${esc(g.list[0].s)}</span></a></div>`;
-    }
-  }
-  h += '</div>';
+  let h = `<ol class="days">${main.map(d => `<li${d.label.includes('幕間') ? ' class="inter"' : ''}><a href="${link(d)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title || '（未命名）')}</span></a></li>`).join('')}</ol>`;
   if (cr) h += `<p class="toc-credits"><a href="${link(cr)}"><span class="n">${esc(cr.label)}</span><span class="t">${esc(cr.title || '')}</span></a></p>`;
   return h;
 }
