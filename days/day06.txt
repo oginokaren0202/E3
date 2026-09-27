@@ -1,5 +1,6 @@
 # 第六日： 〈到那冰河上〉之六
 [音樂]bgm/breeze.mp3
+[音樂]bgm/snowstep.mp3 60%
 [置中][色=#D6D6D6][{事件1|Hagall} | 其果](https://projectofficial202.wixsite.com/ullarsalr/events/hailstorm)[/色][/置中] [小][靠右]*2026.09.11*[/靠右][/小]
 
 
