@@ -73,3 +73,11 @@ hr{border:0;border-top:1px solid var(--rule);margin:3rem auto;width:40%}
 .say .note{color:var(--muted);font-weight:400;margin-left:.25em}
 figure.sm{max-width:50%;margin:2rem auto}
 figure.sm figcaption{padding:.5rem 0 0}
+
+/* 同一行置中＋靠右 */
+.row{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline;column-gap:1rem;white-space:normal}
+.row>.center{grid-column:2}
+.row>:not(.center){grid-column:3;justify-self:end;text-align:right}
+.row .right{display:inline}
+/* 文章開頭就是這種並列行時，貼近上方分隔線 */
+article>.nar:first-child:has(> .row){margin-top:-1rem}
