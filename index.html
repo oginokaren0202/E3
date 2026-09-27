@@ -9,6 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20260927b">
 <style>
+.all-top{margin:2rem 0;font-size:.9rem}
+.all-top a{color:var(--muted)}
+.all-sep{margin:4rem auto;width:30%}
+.all-part .day-head{padding-top:1rem}
 .toc-credits{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule)}
 .toc-credits a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;text-decoration:none;color:var(--muted);font-size:.9rem;align-items:baseline}
 .toc-credits a:hover .t{text-decoration:underline}
@@ -55,7 +59,19 @@ function creditLink(current){
   if (!c || c === current) return '';
   return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${esc(c.label)}</a></p>`;
 }
+// 全文頁：網址後面加 #all，所有篇依目錄順序接在同一頁（不列在目錄、沒有雪和音樂）
+function showAll(){
+  document.title = `全文｜${setting.title}`;
+  const list = items.filter(x => !isCredits(x));
+  app.innerHTML = `<p class="all-top"><a href="#">回目錄</a></p>` +
+    list.map(d => `<section class="all-part">${renderDay(d.label, {...d, bgm: []})}</section>`).join('<hr class="all-sep">') +
+    `<p class="all-top"><a href="#">回目錄</a></p>`;
+  setSnow(0);
+  setupBgm(null);
+  window.scrollTo(0, 0);
+}
 function route(){
+  if (location.hash === '#all') return showAll();
   const id = decodeURIComponent(location.hash.slice(1));
   const d = items.find(x => x.id === id);
   if (d) {
@@ -179,6 +195,7 @@ function newFlake(top){
           sway: Math.random() * Math.PI * 2, a: 0.5 + Math.random() * 0.5};
 }
 function setSnow(level){
+  if (!level) { target = 0; flakes = []; ctx.clearRect(0, 0, W, H); return; }
   const L = LEVELS[level];
   target = Math.round(L.count * (innerWidth * innerHeight) / (1280 * 800));
   speedK = L.speed; windK = L.wind;
@@ -219,7 +236,7 @@ function tick(){
   requestAnimationFrame(tick);
 }
 addEventListener('resize', () => { resize(); setSnow(currentLevel()); });
-function currentLevel(){ const d = items && items.find(x => x.id === decodeURIComponent(location.hash.slice(1))); return d ? levelOf(d) : 1; }
+function currentLevel(){ if (location.hash === '#all') return 0; const d = items && items.find(x => x.id === decodeURIComponent(location.hash.slice(1))); return d ? levelOf(d) : 1; }
 resize();
 
 (async () => {

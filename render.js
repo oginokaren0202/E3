@@ -54,9 +54,11 @@ function parseSetting(txt){
 
 
 // 同一行裡同時有 [置中] 和 [靠右]：排成一列，置中的在中間、其他的靠右
-function rowify(line){
+// 文章第一行只有 [靠右]（例如只有日期）也排成一列，音樂按鈕才能和它同一行
+function rowify(line, first){
   const h = inline(line);
-  return (h.includes('class="center"') && h.includes('class="right"')) ? `<span class="row">${h}</span>` : h;
+  const hasC = h.includes('class="center"'), hasR = h.includes('class="right"');
+  return ((hasC && hasR) || (first && hasR)) ? `<span class="row">${h}</span>` : h;
 }
 // 自成一塊的行（置中、靠右、並列）前後不再多加換行，避免多出空行
 const isBlock = h => /^<span class="(center|right|row)"/.test(h) && h.endsWith('</span>');
@@ -69,7 +71,7 @@ function parseDay(txt, chars){
   const names = Object.keys(chars).sort((a,b) => b.length - a.length);
   let buf = [], quote = [], blanks = 0;
   const flush = () => {
-    if (buf.length) html += `<p class="nar">${joinLines(buf.map(rowify))}</p>`;
+    if (buf.length) html += `<p class="nar">${joinLines(buf.map((l, i) => rowify(l, !html && i === 0)))}</p>`;
     if (quote.length) html += `<blockquote>${quote.map(inline).join('\n')}</blockquote>`;
     buf = []; quote = [];
   };
@@ -86,7 +88,7 @@ function parseDay(txt, chars){
     if (!title && (m = line.match(/^#\s+(.+)$/))) { title = m[1]; continue; }
     if ((m = line.match(/^##\s+(.+)$/))) { flush(); html += `<h2 class="scene">${inline(m[1])}</h2>`; continue; }
     if (/^-{3,}$/.test(line)) { flush(); html += '<hr>'; continue; }
-    if ((m = line.match(/^>\s?(.*)$/))) { if (buf.length) { html += `<p class="nar">${joinLines(buf.map(rowify))}</p>`; buf = []; } quote.push(m[1]); continue; }
+    if ((m = line.match(/^>\s?(.*)$/))) { if (buf.length) { html += `<p class="nar">${joinLines(buf.map((l, i) => rowify(l, !html && i === 0)))}</p>`; buf = []; } quote.push(m[1]); continue; }
     if (quote.length) flush();
     if ((m = line.match(/^\[(圖|小圖)\]\s*(\S+)\s*(.*)$/))) {
       flush();
