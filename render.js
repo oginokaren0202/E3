@@ -1,6 +1,8 @@
-// 純文字
+// 純文字 → 團錄 HTML（正式網站和後台共用）
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2, '0');
+// [顯示文字](網址) → 連結；只接受 http/https，另開新分頁
+const linkify = h => h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
 function parseSetting(txt){
   const s = {title:'', desc:'', chars:{}};
@@ -47,16 +49,27 @@ function parseDay(txt, chars){
     if (who) {
       const c = chars[who], text = line.slice(who.length + 1).trim();
       const av = c.avatar ? `<img class="av" src="images/${esc(c.avatar)}" alt="">` : `<div class="av" aria-hidden="true">${esc([...who][0])}</div>`;
-      html += `<div class="say" style="--c:${c.color}">${av}<div><b>${esc(who)}</b><p>${esc(text)}</p></div></div>`;
+      html += `<div class="say" style="--c:${c.color}">${av}<div><b>${esc(who)}</b><p>${linkify(esc(text))}</p></div></div>`;
       continue;
     }
-    html += `<p class="nar">${esc(line)}</p>`;
+    html += `<p class="nar">${linkify(esc(line))}</p>`;
   }
   return {title, html, dice};
 }
 
-function renderDay(n, d){
-  return `<header class="day-head"><p class="day-no">第 ${n} 天</p><h1>${esc(d.title)}</h1></header><article>${d.html}</article>`;
+function renderDay(label, d){
+  return `<header class="day-head"><p class="day-no">${esc(label)}</p><h1>${esc(d.title)}</h1></header><article>${d.html}</article>`;
+}
+
+// 目錄.txt：每行「顯示名稱 檔名.txt」，檔名是最後一段
+function parseToc(txt){
+  const list = [];
+  for (const raw of (txt||'').split(/\r?\n/)){
+    const line = raw.trim();
+    const m = line.match(/^(.*?)[\s\u3000]+(\S+\.txt)$/i);
+    if (m) list.push({label: m[1].trim(), file: m[2], id: m[2].replace(/\.txt$/i, '')});
+  }
+  return list;
 }
 
 function renderCover(s){
