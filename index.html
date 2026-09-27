@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>載入中</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="render.js"></script>
+</head>
+<body>
+<main id="app"><p class="msg">載入中……</p></main>
+<script>
+const app = document.getElementById('app');
+async function getText(path){
+  const r = await fetch(path, {cache:'no-cache'});
+  return r.ok ? r.text() : null;
+}
+async function loadAllDays(chars){
+  const days = [];
+  for (let start = 1; ; start += 10){
+    const batch = await Promise.all(Array.from({length:10}, (_, i) => getText(`days/day${pad(start+i)}.txt`)));
+    for (let i = 0; i < batch.length; i++){
+      if (batch[i] === null) return days;
+      days.push({n: start + i, ...parseDay(batch[i], chars)});
+    }
+  }
+}
+let setting, days;
+function route(){
+  const n = parseInt(location.hash.slice(1), 10);
+  const d = days.find(x => x.n === n);
+  if (d) {
+    document.title = `${d.title}｜${setting.title}`;
+    const i = days.indexOf(d), prev = days[i-1], next = days[i+1];
+    app.innerHTML = renderDay(d.n, d) + `
+      <nav class="pager" aria-label="換頁">
+        ${prev?`<a href="#${prev.n}"><small>前一天</small>${esc(prev.title)}</a>`:'<span></span>'}
+        <a class="home" href="#">目錄</a>
+        ${next?`<a class="next" href="#${next.n}"><small>下一天</small>${esc(next.title)}</a>`:'<span></span>'}
+      </nav>`;
+  } else {
+    document.title = setting.title || '目錄';
+    app.innerHTML = renderCover(setting) + (days.length
+      ? `<ol class="days">${days.map(d => `<li><a href="#${d.n}"><span class="n">${d.n}</span><span class="t">${esc(d.title||'（未命名）')}</span>${d.dice?'<span title="有擲骰判定">🎲</span>':''}</a></li>`).join('')}</ol>`
+      : '<p class="msg">還沒有內容。</p>');
+  }
+  window.scrollTo(0, 0);
+}
+(async () => {
+  setting = parseSetting(await getText('setting.txt'));
+  days = await loadAllDays(setting.chars);
+  route();
+  addEventListener('hashchange', route);
+})().catch(() => { app.innerHTML = '<p class="msg">讀取失敗。請確認 setting.txt 和 days 資料夾都已上傳。</p>'; });
+</script>
+</body>
+</html>
