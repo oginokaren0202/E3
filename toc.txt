@@ -11,6 +11,4 @@
 第十日　day10.txt
 第十一日　day11.txt
 
---- 
-
 素材來源及致謝　credits.txt
