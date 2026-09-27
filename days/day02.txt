@@ -1,6 +1,6 @@
 # 第二日：〈到那冰河上〉之二
 [音樂]bgm/FIRE.mp3
-[置中][色=#D6D6D6][{事件1|Hagall} | 其枝](https://projectofficial202.wixsite.com/ullarsalr/events/hailstorm)[/色][/置中] [小][靠右]*2026.09.06*[/靠右][/小]
+[置中][色=#D6D6D6][{事件1|Hagall} | 其枝](https://projectofficial202.wixsite.com/ullarsalr/events/hailstorm)[/色][/置中] [小][靠右]*2026.09.07*[/靠右][/小]
 　　
 
         聽說有野兔被雨砸死了。
