@@ -11,7 +11,7 @@
 [出現於] bgm/breeze.mp3
 
 **踏雪聲**
-[Snow Footsteps Crunch 1 Mono.wav](https://freesound.org/s/614137/) by JRWEntertainment
+[sfx_snow_footstep-01.wav](https://freesound.org/s/378056/) by bajko
 授權：[Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
 [出現於] bgm/snowstep.mp3
 
