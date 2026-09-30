@@ -13,4 +13,6 @@
 第十二日　day12.txt
 第十三日　day13.txt
 第十四日　day14.txt
+第十五日　day15.txt
+第十六日　day16.txt
 Credits　credits.txt
