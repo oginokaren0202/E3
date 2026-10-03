@@ -1,6 +1,6 @@
 # 第二十日： 〈於日、於夢、於那眼中〉之六
 [音樂]bgm/FIRE.mp3
-[音樂]bgm/unnr.mp3 20%
+[音樂]bgm/unnr.mp3 10%
 [置中][色=#D6D6D6][{事件3|Lögr} | 其枝](https://projectofficial202.wixsite.com/ullarsalr/events/water)[/色][/置中] [小][靠右]*2026.09.25*[/靠右][/小]
 
 
