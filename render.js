@@ -19,10 +19,11 @@ function inline(raw){
 // 標題、目錄等本身就是連結的地方：保留格式，但拿掉內部連結
 const inlineNoLink = t => inline(t).replace(/<a [^>]*>|<\/a>/g, '');
 // 純文字（瀏覽器分頁名稱用）
-const plain = t => inline(t).replace(/<rt>[\s\S]*?<\/rt>/g, '').replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+const plain = t => inline(t).replace(/<br>/g, ' ').replace(/<rt>[\s\S]*?<\/rt>/g, '').replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
 
 function fmt(t){
   return t
+    .replace(/\[換行\]/g, '<br>')                                                  // [換行]
     .replace(/\{([^{}|]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>')                  // {漢字|讀音}
     .replace(/\[色=(#[0-9a-fA-F]{3,8})\]([\s\S]+?)\[\/色\]/g, '<span style="color:$1">$2</span>')
     .replace(/\[字=(\d{1,3})[%％]\]([\s\S]+?)\[\/字\]/g, '<span style="font-size:$1%">$2</span>')
