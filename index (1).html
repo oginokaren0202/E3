@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>載入中</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20261012c">
+<style>
+.all-top{margin:2rem 0;font-size:.9rem}
+.all-top a{color:var(--muted)}
+.all-sep{margin:4rem auto;width:30%}
+.all-part .day-head{padding-top:1rem}
+.toc-credits{margin-top:2.5rem;padding-top:0;border-top:0}
+.toc-credits a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;text-decoration:none;color:var(--muted);font-size:.9rem;align-items:baseline}
+.toc-credits a:hover .t{text-decoration:underline}
+.site-notes{text-align:center;margin-top:3rem;font-size:.8rem;line-height:1.9;color:var(--muted);white-space:pre-wrap}
+.site-notes a{color:inherit}
+.credit-link{text-align:center;margin-top:2.5rem;font-size:.8rem}
+.credit-link a{color:var(--muted);text-decoration:none}
+.credit-link a:hover{text-decoration:underline}
+#snow{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main{position:relative;z-index:1}
+</style>
+<script src="render.js?v=20261012c"></script>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<main id="app"><p class="msg">載入中……</p></main>
+<script>
+const app = document.getElementById('app');
+async function getText(path){
+  const r = await fetch(encodeURI(path), {cache:'no-cache'});
+  return r.ok ? r.text() : null;
+}
+let setting, items, problems = [];
+// [出現於] bgm/檔名.mp3 → 自動列出有用到這個音檔的篇（依目錄順序）
+function fillAppears(){
+  const norm = x => x.replace(/^\.?\//, '').toLowerCase();
+  app.querySelectorAll('.appears').forEach(el => {
+    const want = el.dataset.src.split(/\s+/).map(norm);
+    const used = items.filter(it => (it.bgm || []).some(b => want.includes(norm(b.src))));
+    el.innerHTML = '出現於：' + (used.length
+      ? used.map(it => `<a href="#${encodeURIComponent(it.id)}">${inlineNoLink(it.label)}</a>`).join('、')
+      : '（尚未使用）');
+  });
+}
+// ===== 目錄頁：一行一篇；素材致謝分開放在列表下方 =====
+const isCredits = x => x.file.toLowerCase() === 'credits.txt';
+function tocHtml(){
+  const main = items.filter(x => !isCredits(x)), cr = items.find(isCredits);
+  const link = it => `#${encodeURIComponent(it.id)}`;
+  let h = `<ol class="days">${main.map(d => `<li${d.label.includes('幕間') ? ' class="inter"' : ''}><a href="${link(d)}"><span class="n">${inlineNoLink(d.label)}</span><span class="t">${d.title ? inlineNoLink(d.title) : '（未命名）'}</span></a></li>`).join('')}</ol>`;
+  if (cr) h += `<p class="toc-credits"><a href="${link(cr)}"><span class="n">${inlineNoLink(cr.label)}</span><span class="t">${inlineNoLink(cr.title || '')}</span></a></p>`;
+  return h;
+}
+function creditLink(current){
+  const c = items.find(isCredits);
+  if (!c || c === current) return '';
+  return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${inlineNoLink(c.label)}</a></p>`;
+}
+// 全文頁：網址後面加 #all，所有篇依目錄順序接在同一頁（不列在目錄、沒有雪和音樂）
+function showAll(){
+  document.title = `全文｜${plain(setting.title)}`;
+  const list = items.filter(x => !isCredits(x));
+  app.innerHTML = `<p class="all-top"><a href="#">回目錄</a></p>` +
+    list.map(d => `<section class="all-part">${renderDay(d.label, {...d, bgm: []})}</section>`).join('<hr class="all-sep">') +
+    `<p class="all-top"><a href="#">回目錄</a></p>`;
+  setSnow(0);
+  setupBgm(null);
+  window.scrollTo(0, 0);
+}
+function route(){
+  if (location.hash === '#all') return showAll();
+  const id = decodeURIComponent(location.hash.slice(1));
+  const d = items.find(x => x.id === id);
+  if (d) {
+    document.title = `${plain(d.title)}｜${plain(setting.title)}`;
+    const i = items.indexOf(d), prev = items[i-1], next = items[i+1];
+    app.innerHTML = renderDay(d.label, d) + `
+      <nav class="pager" aria-label="換頁">
+        ${prev?`<a href="#${encodeURIComponent(prev.id)}"><small>上一篇</small>${inlineNoLink(prev.title)}</a>`:'<span></span>'}
+        <a class="home" href="#">目錄</a>
+        ${next?`<a class="next" href="#${encodeURIComponent(next.id)}"><small>下一篇</small>${inlineNoLink(next.title)}</a>`:'<span></span>'}
+      </nav>` + creditLink(d);
+    fillAppears();
+  } else {
+    document.title = plain(setting.title) || '目錄';
+    const warn = problems.length ? `<p class="msg" style="padding:1rem 0;color:#9A3B3B">${problems.map(esc).join('<br>')}</p>` : '';
+    app.innerHTML = renderCover(setting) + warn + (items.length ? tocHtml() : '<p class="msg">目錄是空的。</p>')
+      + (setting.notes.length ? `<p class="site-notes">${setting.notes.map(inline).join('\n')}</p>` : '');
+  }
+  setSnow(d ? levelOf(d) : 1);
+  setupBgm(d);
+  window.scrollTo(0, 0);
+}
+
+
+// ===== 音樂 =====
+// 一篇可以有多個 [音樂]，同時播放，共用一個按鈕
+// 進入該篇就自動播放；讀者按過暫停，之後換篇就不自動播，直到再按播放
+let tracks = [], userPaused = false, fadeTimer;
+function setupBgm(d){
+  tracks.forEach(t => t.pause());
+  tracks = [];
+  clearInterval(fadeTimer);
+  const btn = app.querySelector('.bgm');
+  if (!d || !d.bgm || !d.bgm.length || !btn) return;
+  tracks = d.bgm.map(b => {
+    const a = new Audio(/^https?:/.test(b.src) ? b.src : encodeURI(b.src));
+    a.loop = true; a.dataset.vol = b.vol;
+    return a;
+  });
+  const mine = tracks;
+  const anyPlaying = () => mine.some(a => !a.paused);
+  const sync = () => {
+    const on = anyPlaying();
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-label', on ? '暫停音樂' : '播放音樂');
+  };
+  // 音波只在「真的發出聲音」時跳動：任一軌在播就跳
+  const live = () => btn.classList.toggle('live', mine.some(a => a.dataset.live === '1'));
+  mine.forEach(a => {
+    a.addEventListener('play', sync);
+    a.addEventListener('pause', sync);
+    a.addEventListener('playing', () => { a.dataset.live = '1'; live(); });
+    ['pause', 'waiting', 'stalled', 'ended', 'error', 'emptied'].forEach(ev => a.addEventListener(ev, () => { a.dataset.live = '0'; live(); }));
+  });
+  // 找不到或無法播放的音檔：滑鼠移到按鈕上會顯示是哪一個
+  const bad = new Set();
+  mine.forEach((a, i) => a.addEventListener('error', () => {
+    bad.add(d.bgm[i].src);
+    btn.title = '無法播放：' + [...bad].join('、');
+  }));
+  // 各軌分開播放：其中一軌失敗，不影響其他軌
+  const start = () => {
+    mine.forEach(a => a.volume = 0);
+    return Promise.allSettled(mine.map(a => a.play())).then(res => {
+      const ok = mine.filter((a, i) => res[i].status === 'fulfilled');
+      if (!ok.length) throw new Error('blocked');
+      let k = 0;                                                   // 1.5 秒淡入到各自音量
+      fadeTimer = setInterval(() => {
+        k = Math.min(1, k + 0.05);
+        ok.forEach(a => a.volume = k * +a.dataset.vol);
+        if (k >= 1) clearInterval(fadeTimer);
+      }, 75);
+    });
+  };
+  const stop = () => { clearInterval(fadeTimer); mine.forEach(a => a.pause()); };
+  btn.onclick = () => {
+    if (anyPlaying()) { userPaused = true; stop(); }
+    else { userPaused = false; start().catch(() => { stop(); sync(); }); }
+  };
+  sync();
+  if (!userPaused) start().catch(() => { stop(); sync(); });   // 被瀏覽器擋下 → 全部停住，按鈕維持「播放」
+}
+
+// ===== 下雪 =====
+// 從顯示名稱取天數：支援「第3天」「第三日」「Day 12」等
+function dayNumber(label){
+  const a = label.match(/\d+/);
+  if (a) return +a[0];
+  const c = label.match(/[〇零一二兩三四五六七八九十]+/);
+  if (!c) return null;
+  const D = {'〇':0,'零':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+  const t = c[0];
+  if (!t.includes('十')) return D[t] ?? null;
+  const [tens, ones] = t.split('十');
+  return (tens ? D[tens] : 1) * 10 + (ones ? D[ones] : 0);
+}
+// 1–7 稀疏、8–14 稍密、15–21 密集、22 以後 多
+// 沒有天數的篇（前日談、幕間）沿用前一個有天數的篇；再往前都沒有就用稀疏
+function levelOf(d){
+  for (let i = items.indexOf(d); i >= 0; i--){
+    const n = dayNumber(items[i].label);
+    if (n) return n <= 7 ? 1 : n <= 14 ? 2 : n <= 21 ? 3 : 4;
+  }
+  return 1;
+}
+
+// count 雪量｜speed 下落速度｜wind 往左斜飄的程度
+const LEVELS = {1:{count:22, speed:0.5, wind:0}, 2:{count:55, speed:0.9, wind:0.25}, 3:{count:105, speed:1.4, wind:0.7}, 4:{count:170, speed:2.1, wind:1.4}};
+const cv = document.getElementById('snow'), ctx = cv.getContext('2d');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+let flakes = [], target = 0, speedK = 0.5, windK = 0, W = 0, H = 0, running = false;
+
+function resize(){
+  const r = devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W * r; cv.height = H * r;
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+}
+function newFlake(top){
+  return {x: Math.random() * (W + H * windK * 0.5), y: top ? -10 : Math.random() * H,   // 有風時從右側多補雪
+          r: 0.8 + Math.random() * 2.2, v: 0.4 + Math.random() * 0.8,
+          sway: Math.random() * Math.PI * 2, a: 0.5 + Math.random() * 0.5};
+}
+function setSnow(level){
+  if (!level) { target = 0; flakes = []; ctx.clearRect(0, 0, W, H); return; }
+  const L = LEVELS[level];
+  target = Math.round(L.count * (innerWidth * innerHeight) / (1280 * 800));
+  speedK = L.speed; windK = L.wind;
+  if (!running && !reduce.matches) { running = true; requestAnimationFrame(tick); }
+}
+// 文字欄位範圍內的雪花淡到幾乎透明，邊緣漸變
+let col = {left:0, right:0};
+// 雪飄進文字欄位時保留約 40% 亮度（手機、電腦相同）
+function fadeAt(x){
+  const m = col, edge = 48;
+  const inside = 0.4;
+  const d = Math.min(x - m.left, m.right - x);
+  if (d <= -edge) return 1;
+  if (d >= 0) return inside;
+  return inside + (-d / edge) * (1 - inside);
+}
+function tick(){
+  if (reduce.matches) { ctx.clearRect(0, 0, W, H); running = false; return; }
+  // 雪量逐步增減，不會突然變化
+  if (flakes.length < target) flakes.push(newFlake(true));
+  col = app.getBoundingClientRect();   // 每幀量一次文字欄位位置
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  for (let i = flakes.length - 1; i >= 0; i--){
+    const f = flakes[i];
+    f.y += f.v * speedK * (0.6 + f.r / 3);
+    f.sway += 0.01;
+    f.x += Math.sin(f.sway) * 0.3 - windK * (0.6 + f.r / 3);   // 往左吹
+    if (f.x < -10) f.x = W + 10;
+    if (f.y > H + 10){
+      if (flakes.length > target) { flakes.splice(i, 1); continue; }
+      Object.assign(f, newFlake(true));
+    }
+    ctx.globalAlpha = f.a * fadeAt(f.x);
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(tick);
+}
+addEventListener('resize', () => { resize(); setSnow(currentLevel()); });
+function currentLevel(){ if (location.hash === '#all') return 0; const d = items && items.find(x => x.id === decodeURIComponent(location.hash.slice(1))); return d ? levelOf(d) : 1; }
+resize();
+
+(async () => {
+  setting = parseSetting(await getText('setting.txt'));
+  const tocText = await getText('toc.txt');
+  const toc = parseToc(tocText);
+  const texts = await Promise.all(toc.map(t => getText('days/' + t.file)));
+  items = toc.map((t, i) => texts[i] === null ? null : {...t, ...parseDay(texts[i], setting.chars)}).filter(Boolean);
+  // 讀不到的檔案，在目錄頁上方列出，方便檢查
+  if (tocText === null) problems.push('找不到 toc.txt');
+  else if (!toc.length) problems.push('toc.txt 裡沒有可讀的行（格式：顯示名稱 檔名.txt）');
+  toc.forEach((t, i) => { if (texts[i] === null) problems.push(`找不到 days/${t.file}`); });
+  route();
+  addEventListener('hashchange', route);
+})().catch(() => { app.innerHTML = '<p class="msg">讀取失敗。請確認 setting.txt、toc.txt 和 days 資料夾都已上傳。</p>'; });
+</script>
+</body>
+</html>
