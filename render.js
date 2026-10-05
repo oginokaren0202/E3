@@ -15,10 +15,17 @@ function inline(raw){
   t = fmt(t);
   return t.replace(/\u0001(\d+)\u0002/g, (_, i) => keep[i]);
 }
+
+// 標題、目錄等本身就是連結的地方：保留格式，但拿掉內部連結
+const inlineNoLink = t => inline(t).replace(/<a [^>]*>|<\/a>/g, '');
+// 純文字（瀏覽器分頁名稱用）
+const plain = t => inline(t).replace(/<rt>[\s\S]*?<\/rt>/g, '').replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+
 function fmt(t){
   return t
     .replace(/\{([^{}|]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>')                  // {漢字|讀音}
     .replace(/\[色=(#[0-9a-fA-F]{3,8})\]([\s\S]+?)\[\/色\]/g, '<span style="color:$1">$2</span>')
+    .replace(/\[字=(\d{1,3})[%％]\]([\s\S]+?)\[\/字\]/g, '<span style="font-size:$1%">$2</span>')
     .replace(/\[大\]([\s\S]+?)\[\/大\]/g, '<span class="big">$1</span>')
     .replace(/\[小\]([\s\S]+?)\[\/小\]/g, '<span class="small">$1</span>')
     .replace(/\[置中\]([\s\S]+?)\[\/置中\]/g, '<span class="center">$1</span>')
@@ -120,7 +127,7 @@ function renderDay(label, d){
       ? body.replace('<span class="row">', '<span class="row">' + BGM_BTN)
       : `<p class="bgm-solo">${BGM_BTN}</p>` + body;
   }
-  return `<header class="day-head"><p class="day-no">${esc(label)}</p><h1>${esc(d.title)}</h1></header><article>${body}</article>`;
+  return `<header class="day-head"><p class="day-no">${inlineNoLink(label)}</p><h1>${inline(d.title)}</h1></header><article>${body}</article>`;
 }
 
 // 目錄.txt：每行「顯示名稱 檔名.txt」，檔名是最後一段
@@ -136,5 +143,5 @@ function parseToc(txt){
 
 function renderCover(s){
   const cast = Object.entries(s.chars).map(([k,v]) => `<span style="--c:${v.color}">${esc(k)}</span>`).join('');
-  return `<header class="cover"><h1>${esc(s.title)}</h1>${s.desc?`<p>${esc(s.desc)}</p>`:''}<div class="cast">${cast}</div></header>`;
+  return `<header class="cover"><h1>${inline(s.title)}</h1>${s.desc?`<p>${inline(s.desc)}</p>`:''}${cast?`<div class="cast">${cast}</div>`:''}</header>`;
 }

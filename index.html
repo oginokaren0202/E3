@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260927b">
+<link rel="stylesheet" href="style.css?v=20261005">
 <style>
 .all-top{margin:2rem 0;font-size:.9rem}
 .all-top a{color:var(--muted)}
@@ -22,7 +22,7 @@
 #snow{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 main{position:relative;z-index:1}
 </style>
-<script src="render.js?v=20260927b"></script>
+<script src="render.js?v=20261005"></script>
 </head>
 <body>
 <canvas id="snow" aria-hidden="true"></canvas>
@@ -41,7 +41,7 @@ function fillAppears(){
     const want = el.dataset.src.split(/\s+/).map(norm);
     const used = items.filter(it => (it.bgm || []).some(b => want.includes(norm(b.src))));
     el.innerHTML = '出現於：' + (used.length
-      ? used.map(it => `<a href="#${encodeURIComponent(it.id)}">${esc(it.label)}</a>`).join('、')
+      ? used.map(it => `<a href="#${encodeURIComponent(it.id)}">${inlineNoLink(it.label)}</a>`).join('、')
       : '（尚未使用）');
   });
 }
@@ -50,18 +50,18 @@ const isCredits = x => x.file.toLowerCase() === 'credits.txt';
 function tocHtml(){
   const main = items.filter(x => !isCredits(x)), cr = items.find(isCredits);
   const link = it => `#${encodeURIComponent(it.id)}`;
-  let h = `<ol class="days">${main.map(d => `<li${d.label.includes('幕間') ? ' class="inter"' : ''}><a href="${link(d)}"><span class="n">${esc(d.label)}</span><span class="t">${esc(d.title || '（未命名）')}</span></a></li>`).join('')}</ol>`;
-  if (cr) h += `<p class="toc-credits"><a href="${link(cr)}"><span class="n">${esc(cr.label)}</span><span class="t">${esc(cr.title || '')}</span></a></p>`;
+  let h = `<ol class="days">${main.map(d => `<li${d.label.includes('幕間') ? ' class="inter"' : ''}><a href="${link(d)}"><span class="n">${inlineNoLink(d.label)}</span><span class="t">${d.title ? inlineNoLink(d.title) : '（未命名）'}</span></a></li>`).join('')}</ol>`;
+  if (cr) h += `<p class="toc-credits"><a href="${link(cr)}"><span class="n">${inlineNoLink(cr.label)}</span><span class="t">${inlineNoLink(cr.title || '')}</span></a></p>`;
   return h;
 }
 function creditLink(current){
   const c = items.find(isCredits);
   if (!c || c === current) return '';
-  return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${esc(c.label)}</a></p>`;
+  return `<p class="credit-link"><a href="#${encodeURIComponent(c.id)}">${inlineNoLink(c.label)}</a></p>`;
 }
 // 全文頁：網址後面加 #all，所有篇依目錄順序接在同一頁（不列在目錄、沒有雪和音樂）
 function showAll(){
-  document.title = `全文｜${setting.title}`;
+  document.title = `全文｜${plain(setting.title)}`;
   const list = items.filter(x => !isCredits(x));
   app.innerHTML = `<p class="all-top"><a href="#">回目錄</a></p>` +
     list.map(d => `<section class="all-part">${renderDay(d.label, {...d, bgm: []})}</section>`).join('<hr class="all-sep">') +
@@ -75,17 +75,17 @@ function route(){
   const id = decodeURIComponent(location.hash.slice(1));
   const d = items.find(x => x.id === id);
   if (d) {
-    document.title = `${d.title}｜${setting.title}`;
+    document.title = `${plain(d.title)}｜${plain(setting.title)}`;
     const i = items.indexOf(d), prev = items[i-1], next = items[i+1];
     app.innerHTML = renderDay(d.label, d) + `
       <nav class="pager" aria-label="換頁">
-        ${prev?`<a href="#${encodeURIComponent(prev.id)}"><small>上一篇</small>${esc(prev.title)}</a>`:'<span></span>'}
+        ${prev?`<a href="#${encodeURIComponent(prev.id)}"><small>上一篇</small>${inlineNoLink(prev.title)}</a>`:'<span></span>'}
         <a class="home" href="#">目錄</a>
-        ${next?`<a class="next" href="#${encodeURIComponent(next.id)}"><small>下一篇</small>${esc(next.title)}</a>`:'<span></span>'}
+        ${next?`<a class="next" href="#${encodeURIComponent(next.id)}"><small>下一篇</small>${inlineNoLink(next.title)}</a>`:'<span></span>'}
       </nav>` + creditLink(d);
     fillAppears();
   } else {
-    document.title = setting.title || '目錄';
+    document.title = plain(setting.title) || '目錄';
     const warn = problems.length ? `<p class="msg" style="padding:1rem 0;color:#9A3B3B">${problems.map(esc).join('<br>')}</p>` : '';
     app.innerHTML = renderCover(setting) + warn + (items.length ? tocHtml() : '<p class="msg">目錄是空的。</p>');
   }
