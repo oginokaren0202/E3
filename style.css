@@ -119,6 +119,6 @@ article>.nar:first-child:has(> .row){margin-top:-1rem}
 .toc-b .single + .arc,.toc-b .arc + .single{border-top:1px solid var(--rule)}
 .toc-b .single.inter a{padding-left:1.5rem;font-size:.9rem}
 /* 素材致謝：和列表分開 */
-.toc-credits{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule)}
+.toc-credits{margin-top:2.5rem}
 .toc-credits a{display:grid;grid-template-columns:6.5rem 1fr;gap:0 .75rem;text-decoration:none;color:var(--muted);font-size:.9rem;align-items:baseline}
 .toc-credits a:hover .t{text-decoration:underline}

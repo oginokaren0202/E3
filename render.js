@@ -39,16 +39,19 @@ function fmt(t){
 }
 
 function parseSetting(txt){
-  const s = {title:'', desc:'', chars:{}};
-  let inChars = false;
+  const s = {title:'', desc:'', chars:{}, notes:[]};
+  let mode = '';
   for (let line of (txt||'').split(/\r?\n/)){
-    line = line.trim();
-    if (!line) continue;
+    const raw = line.replace(/\s+$/, '');
+    line = raw.trim();
     let m;
-    if ((m = line.match(/^標題[：:]\s*(.*)$/))) { s.title = m[1]; inChars = false; continue; }
-    if ((m = line.match(/^簡介[：:]\s*(.*)$/))) { s.desc = m[1]; inChars = false; continue; }
-    if (/^角色[：:]\s*$/.test(line)) { inChars = true; continue; }
-    if (inChars){
+    if ((m = line.match(/^標題[：:]\s*(.*)$/))) { s.title = m[1]; mode = ''; continue; }
+    if ((m = line.match(/^簡介[：:]\s*(.*)$/))) { s.desc = m[1]; mode = ''; continue; }
+    if ((m = line.match(/^備註[：:]\s*(.*)$/))) { if (m[1]) s.notes.push(m[1]); mode = 'notes'; continue; }
+    if (/^角色[：:]\s*$/.test(line)) { mode = 'chars'; continue; }
+    if (!line) { if (mode === 'notes') mode = ''; continue; }
+    if (mode === 'notes') { s.notes.push(raw); continue; }
+    if (mode === 'chars'){
       const p = line.split(/\s+/);
       s.chars[p[0]] = {
         color: p.find(x => /^#[0-9a-f]{3,8}$/i.test(x)) || '#6B6F66',
@@ -59,9 +62,6 @@ function parseSetting(txt){
   return s;
 }
 
-
-// 同一行裡同時有 [置中] 和 [靠右]：排成一列，置中的在中間、其他的靠右
-// 文章第一行只有 [靠右]（例如只有日期）也排成一列，音樂按鈕才能和它同一行
 function rowify(line, first){
   const h = inline(line);
   const hasC = h.includes('class="center"'), hasR = h.includes('class="right"');
